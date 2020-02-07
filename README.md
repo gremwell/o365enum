@@ -2,13 +2,26 @@
 
 Enumerate valid usernames from Office 365 using ActiveSync or office.com login page.
 
-## ActiveSync Enumeration
+## Usage
+
+o365enum will read usernames from the file provided as first parameter. The file should have one username per line. The output is CSV-based for easier parsing.
+
+```
+./o365enum.py users.txt
+username,valid
+inexistent@contoso.com,0
+existing@contoso.com,1
+```
+
+## Enumeration Methods
+
+### ActiveSync Enumeration
 
 This method is based on grimhacker's [method](https://grimhacker.com/2017/07/24/office365-activesync-username-enumeration/) that sends Basic HTTP authentication requests to ActiveSync endpoint. However, **checking the status code no longer works given that Office365 returns a 401 whether the user exists or not**.
 
 Instead, we send the same request but check for a custom HTTP response header (`X-MailboxGuid`) presence to identify whether a username is valid or not.
 
-### Existing Account
+#### Existing Account
 
 The request below contains the following Base64 encoded credentials in the Authorization header: valid_user@contoso.com:Password1
 
@@ -49,7 +62,7 @@ Connection: close
 --snip--
 ```
 
-### Nonexistent Account
+#### Nonexistent Account
 
 The request below contains the following Base64 encoded credentials in the Authorization header: invalid_user@contoso.com:Password1
 
@@ -90,7 +103,7 @@ Connection: close
 --snip--
 ```
 
-## Office.com Enumeration
+### Office.com Enumeration
 
 **WARNING**: This method only works for organization that are subscribers of Exchange Online and that do not have on-premise or hybrid deployment of Exchange server.
 
@@ -99,7 +112,7 @@ For companies that use on premise Exchange servers or some hybrid deployment and
 The method is useful when you don't want to burn an authentication attempt with 'Password1' :)
 
 
-### Existing User
+#### Existing User
 
 When the account does not exist, `IfExistsResult` is set to 0.
 
@@ -179,7 +192,7 @@ Content-Length: 587
 }
 ```
 
-### Inexistent User
+#### Inexistent User
 
 When the account does not exist, `IfExistsResult` is set to 1.
 
