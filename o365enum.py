@@ -11,12 +11,6 @@ import string
 import sys
 import requests
 
-PROXIES = {
-    "http":"http://localhost:8080",
-    "https":"http://localhost:8080"
-}
-VERIFY = False
-
 def load_usernames(usernames_file):
     '''
     Loads a list of usernames from `usernames_file`.
@@ -40,9 +34,7 @@ def o365enum_activesync(usernames):
     for username in usernames:
         response = requests.options(
             "https://outlook.office365.com/Microsoft-Server-ActiveSync",
-            auth=(username, 'Password1'),
-            verify=False,
-            proxies=PROXIES
+            auth=(username, 'Password1')
         )
         print("{},{}".format(username, int('X-MailboxGuid' in response.headers)))
 
@@ -61,9 +53,7 @@ def o365enum_office(usernames):
     session = requests.session()
     response = session.get(
         "https://www.office.com",
-        headers=headers,
-        proxies=PROXIES,
-        verify=VERIFY
+        headers=headers
     )
     # we get the application identifier and session identifier
     client_id = re.findall(b'"appId":"([^"]*)"', response.content)
@@ -72,8 +62,6 @@ def o365enum_office(usernames):
     response = session.get(
         "https://www.office.com/login?es=Click&ru=/&msafed=0",
         headers=headers,
-        proxies=PROXIES,
-        verify=VERIFY,
         allow_redirects=True
     )
     hpgid = re.findall(b'hpgid":([0-9]+),', response.content)
@@ -117,8 +105,6 @@ def o365enum_office(usernames):
         response = session.post(
             "https://login.microsoftonline.com/common/GetCredentialType?mkt=en-US",
             headers=headers,
-            proxies=PROXIES,
-            verify=False,
             json=payload
         )
         if response.status_code == 200:
