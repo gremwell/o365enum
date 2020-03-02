@@ -4,10 +4,31 @@ Enumerate valid usernames from Office 365 using ActiveSync or office.com login p
 
 ## Usage
 
-o365enum will read usernames from the file provided as first parameter. The file should have one username per line. The output is CSV-based for easier parsing.
+o365enum will read usernames from the file provided as first parameter. The file should have one username per line. The output is CSV-based for easier parsing. Valid status can be 0 (invalid user), 1 (valid user), 2 (valid user and valid password).
 
 ```
-./o365enum.py users.txt
+python3.6 o365enum.py -h
+usage: o365enum.py [-h] -u USERLIST [-p PASSWORD] [-n NUM] [-v]
+                   [-m {activesync,office.com}]
+
+Office365 User Enumeration Script
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -u USERLIST, --userlist USERLIST
+                        username list one per line (default: None)
+  -p PASSWORD, --password PASSWORD
+                        password to try (default: Password1)
+  -n NUM, --num NUM     # of reattempts to remove false negatives (default: 3)
+  -v, --verbose         Enable verbose output at urllib level (default: False)
+  -m {activesync,office.com}, --method {activesync,office.com}
+                        method to use (default: activesync)
+```
+
+Example run:
+
+```
+./o365enum.py -u users.txt -p Password2 -n 1 -m activesync
 username,valid
 inexistent@contoso.com,0
 existing@contoso.com,1
@@ -272,3 +293,7 @@ Content-Length: 579
     "Display": "inexistent@contoso.com"
 }
 ```
+
+## Contributors
+
+* [@jenic](https://github.com/jenic) - Arguments parsing and false negative reduction.
