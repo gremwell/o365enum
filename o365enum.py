@@ -66,6 +66,35 @@ def o365enum_activesync(usernames):
         if state == 0:
             print("{},{}".format(username,0))
 
+def o365enum_autodiscover(usernames):
+    '''
+    Check if `usernames` exists using Autodiscover v1.
+
+    Args:
+        usernames(list): list of usernames to enumerate
+    '''
+    headers = {
+        "MS-ASProtocolVersion": "14.0",
+        "User-Agent": "Microsoft Office/16.0 (Windows NT 10.0; Microsoft Outlook 16.0.12026; Pro"
+    }
+    for username in usernames:
+        state = 0
+        for x in range(0, args.num):
+            response = requests.get(
+                "https://outlook.office365.com/autodiscover/autodiscover.json"\
+                    "/v1.0/{}?Protocol=Autodiscoverv1".format(username),
+                headers=headers,
+                allow_redirects=False
+            )
+            if response.status_code == 200:
+                state = 1
+                break
+            elif response.status_code == 302 and \
+                'outlook.office365.com' not in response.headers['Location']:
+                state = 1
+                break
+        print("{},{}".format(username,state))
+
 def o365enum_office(usernames):
     '''
     Checks if `usernames` exists using office.com method.
@@ -148,6 +177,8 @@ def o365enum(usernames, method="activesync"):
     print("username,valid")
     if method == "activesync":
         o365enum_activesync(usernames)
+    elif method == "autodiscover":
+        o365enum_autodiscover(usernames)
     elif method == "office.com":
         o365enum_office(usernames)
     else:
@@ -167,7 +198,7 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose', default=False, action='store_true',
             help='Enable verbose output at urllib level')
     parser.add_argument('-m', '--method', default='activesync', type=str,
-            choices=('activesync', 'office.com'),
+            choices=('activesync', 'autodiscover', 'office.com'),
             help='method to use')
     args = parser.parse_args()
 
