@@ -48,7 +48,7 @@ request-id: d494a4bc-3867-436a-93ef-737f9e0522eb
 X-CalculatedBETarget: AM0PR09MB2882.eurprd09.prod.outlook.com
 X-BackEndHttpStatus: 401
 X-RUM-Validated: 1
-X-MailboxGuid: aadaf467-cd08-4a23-909b-9702eca5b845 <---------------- This header leaks the account status (existing)
+X-MailboxGuid: aadaf467-cd08-4a23-909b-9702eca5b845 <--- This header leaks the account status (existing)
 X-DiagInfo: AM0PR09MB2882
 X-BEServer: AM0PR09MB2882
 X-Proxy-RoutingCorrectness: 1
