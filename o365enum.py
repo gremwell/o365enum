@@ -181,25 +181,26 @@ def o365enum(usernames, method="activesync"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-            description='Office365 User Enumeration Script')
-    parser.add_argument('-u', '--userlist', required=True, type=str,
-            help='username list one per line')
-    parser.add_argument('-p', '--password', default='Password1', type=str,
-            help='password to try')
-    parser.add_argument('-n', '--num', default=3, type=int,
-            help='# of reattempts to remove false negatives')
-    parser.add_argument('-v', '--verbose', default=False, action='store_true',
-            help='Enable verbose output at urllib level')
-    parser.add_argument('-m', '--method', default='activesync', type=str,
-            choices=('activesync', 'autodiscover', 'office.com'),
-            help='method to use')
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description='Office365 User Enumeration Script')
+    parser.add_argument('-u', '--userlist', required=True, type=str,\
+        help='username list one per line')
+    parser.add_argument('-p', '--password', default='Password1', type=str,\
+        help='password to try')
+    parser.add_argument('-n', '--num', default=3, type=int,\
+        help='# of reattempts to remove false negatives')
+    parser.add_argument('-v', '--verbose', default=False, action='store_true',\
+        help='Enable verbose output at urllib level')
+    parser.add_argument('-m', '--method', default='activesync', type=str,\
+        choices=('activesync', 'autodiscover', 'office.com'),\
+        help='method to use')
     args = parser.parse_args()
 
     if args.verbose:
         http_client.HTTPConnection.debuglevel = 1
         logging.basicConfig(
-                format="%(asctime)s: %(levelname)s: %(module)s: %(message)s")
+            format="%(asctime)s: %(levelname)s: %(module)s: %(message)s"
+        )
         logging.getLogger().setLevel(logging.DEBUG)
         requests_log = logging.getLogger("requests.packages.urllib3")
         requests_log.setLevel(logging.DEBUG)
