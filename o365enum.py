@@ -157,7 +157,7 @@ def o365enum(usernames, method="activesync"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-            description='Rebuild username enum')
+            description='Office365 User Enumeration Script')
     parser.add_argument('-u', '--userlist', required=True, type=str,
             help='username list one per line')
     parser.add_argument('-p', '--password', default='Password1', type=str,
