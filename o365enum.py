@@ -8,10 +8,9 @@ Author: Quentin Kaiser <quentin@gremwell.com>
 import random
 import re
 import string
-import sys
-import requests
 import argparse
 import logging
+import requests
 
 try:
     import http.client as http_client
@@ -44,7 +43,7 @@ def o365enum_activesync(usernames):
     }
     for username in usernames:
         state = 0
-        for x in range(0, args.num):
+        for _ in range(0, args.num):
             response = requests.options(
                 "https://outlook.office365.com/Microsoft-Server-ActiveSync",
                 headers=headers,
@@ -73,7 +72,7 @@ def o365enum_autodiscover(usernames):
     }
     for username in usernames:
         state = 0
-        for x in range(0, args.num):
+        for _ in range(0, args.num):
             response = requests.get(
                 "https://outlook.office365.com/autodiscover/autodiscover.json"\
                     "/v1.0/{}?Protocol=Autodiscoverv1".format(username),
