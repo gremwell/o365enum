@@ -30,7 +30,7 @@ Example run:
 ```
 ./o365enum.py -u users.txt -p Password2 -n 1 -m activesync
 username,valid
-inexistent@contoso.com,0
+nonexistent@contoso.com,0
 existing@contoso.com,1
 ```
 
@@ -164,10 +164,10 @@ Connection: close
 {"Protocol":"Autodiscoverv1","Url":"https://outlook.office365.com/autodiscover/autodiscover.xml"}
 ```
 
-#### Inexistent User
+#### Nonexistent User
 
 ```
-GET /autodiscover/autodiscover.json/v1.0/inexistent@contoso.com?Protocol=Autodiscoverv1 HTTP/1.1
+GET /autodiscover/autodiscover.json/v1.0/nonexistent@contoso.com?Protocol=Autodiscoverv1 HTTP/1.1
 Host: outlook.office365.com
 User-Agent: Microsoft Office/16.0 (Windows NT 10.0; Microsoft Outlook 16.0.12026; Pro
 Accept-Encoding: gzip, deflate
@@ -181,7 +181,7 @@ HTTP/1.1 302 Found
 Cache-Control: private
 Content-Length: 277
 Content-Type: text/html; charset=utf-8
-Location: https://outlook.office365.com/autodiscover/autodiscover.json?Email=inexistent%40contoso.com&Protocol=Autodiscoverv1&RedirectCount=1
+Location: https://outlook.office365.com/autodiscover/autodiscover.json?Email=nonexistent%40contoso.com&Protocol=Autodiscoverv1&RedirectCount=1
 Server: Microsoft-IIS/10.0
 request-id: 1c50adeb-53ac-41b9-9c34-7045cffbae45
 X-CalculatedBETarget: DB6PR0202MB2568.eurprd02.prod.outlook.com
@@ -198,7 +198,7 @@ Date: Mon, 02 Mar 2020 12:50:50 GMT
 Connection: close
 
 <html><head><title>Object moved</title></head><body>
-<h2>Object moved to <a href="https://outlook.office365.com/autodiscover/autodiscover.json?Email=inexistent%40contoso.com&amp;Protocol=Autodiscoverv1&amp;RedirectCount=1">here</a>.</h2>
+<h2>Object moved to <a href="https://outlook.office365.com/autodiscover/autodiscover.json?Email=nonexistent%40contoso.com&amp;Protocol=Autodiscoverv1&amp;RedirectCount=1">here</a>.</h2>
 </body></html>
 ```
 
@@ -292,7 +292,7 @@ Content-Length: 587
 }
 ```
 
-#### Inexistent User
+#### Nonexistent User
 
 When the account does not exist, `IfExistsResult` is set to 1.
 
@@ -326,7 +326,7 @@ Content-Type: application/json
     "isAccessPassSupported": true,
     "isFidoSupported": false,
     "isExternalFederationDisallowed": false,
-    "username": "inexistent@contoso.com",
+    "username": "nonexistent@contoso.com",
     "forceotclogin": false
 }
 ```
@@ -355,7 +355,7 @@ Content-Length: 579
 {
     "ThrottleStatus": 0,
     "apiCanary": "--snip--",
-    "Username": "inexistent@contoso.com",
+    "Username": "nonexistent@contoso.com",
     "IfExistsResult": 1,
     "EstsProperties": {
         "UserTenantBranding": null,
@@ -369,7 +369,7 @@ Content-Length: 579
         "HasPassword": true
     },
     "IsSignupDisallowed": true,
-    "Display": "inexistent@contoso.com"
+    "Display": "nonexistent@contoso.com"
 }
 ```
 
