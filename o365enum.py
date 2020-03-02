@@ -52,19 +52,13 @@ def o365enum_activesync(usernames):
             )
 
             if response.status_code == 200:
-                print(f'{username},2')
-                state = 1
+                state = 2
                 break
             else:
                 if 'X-MailboxGuid' in response.headers:
-                    print("{},{}".format(username, 1))
                     state = 1
                     break
-                else:
-                    state = 0
-
-        if state == 0:
-            print("{},{}".format(username,0))
+        print("{},{}".format(username, state))
 
 def o365enum_autodiscover(usernames):
     '''
@@ -93,7 +87,7 @@ def o365enum_autodiscover(usernames):
                 'outlook.office365.com' not in response.headers['Location']:
                 state = 1
                 break
-        print("{},{}".format(username,state))
+        print("{},{}".format(username, state))
 
 def o365enum_office(usernames):
     '''
