@@ -11,6 +11,8 @@ import string
 import argparse
 import logging
 import requests
+import csv 
+import xml.etree.ElementTree as ET 
 
 try:
     import http.client as http_client
@@ -91,21 +93,35 @@ def o365enum_office(usernames):
         "isSignup":False,
         "isAccessPassSupported":True
     }
-
+    
+    environments = dict()
     for username in usernames:
-        payload["username"] = username
-        response = session.post(
-            "https://login.microsoftonline.com/common/GetCredentialType?mkt=en-US",
-            headers=headers,
-            json=payload
-        )
-        if response.status_code == 200:
-            if int(response.json()['IfExistsResult']) == 1:
-                print("{} INVALID_USER".format(username))
+        
+        domain = username.split("@")[1]
+        if not domain in environments:
+            url = 'https://login.microsoftonline.com/getuserrealm.srf?login={}&xml=1'.format(username)
+            resp = requests.get(url)
+            xmlroot = ET.fromstring(resp.content)
+            environments[domain] = xmlroot[3].text
+        
+        if environments[domain] == "Managed":
+            payload["username"] = username
+            response = session.post(
+                "https://login.microsoftonline.com/common/GetCredentialType?mkt=en-US",
+                headers=headers,
+                json=payload
+            )
+            if response.status_code == 200:
+                if int(response.json()['IfExistsResult']) == 1:
+                    print("{} INVALID_USER".format(username))
+                else:
+                    print("{} VALID_USER".format(username))
             else:
-                print("{} VALID_USER".format(username))
+                print("{} REQUEST ERROR".format(username))
+        elif environments[domain] == "Federated":
+            print("{} DOMAIN_NOT_SUPPORTED".format(username))
         else:
-            print("{} REQUEST ERROR".format(username))
+            print("{} UNKNOWN_DOMAIN".format(username))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

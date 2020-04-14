@@ -25,13 +25,15 @@ Example run:
 ./o365enum.py -u users.txt
 nonexistent@contoso.com INVALID_USER
 existing@contoso.com VALID_USER
+possible@federateddomain.com DOMAIN_NOT_SUPPORTED
+notreal@badomain.com UNKNOWN_DOMAIN
 ```
 
 ## Office.com Enumeration
 
 **WARNING**: This method only works for organization that are subscribers of Exchange Online and that do not have on-premise or hybrid deployment of Exchange server.
 
-For companies that use on premise Exchange servers or some hybrid deployment and based on some configuration I haven't identified yet, the server might return a value indicating the username exists for any username value.
+For companies that use on premise Exchange servers or some hybrid deployment and based on some configuration I haven't identified yet, the script will return DOMAIN_NOT_SUPPORTED.
 
 The method is useful when you don't want to burn an authentication attempt with 'Password1' :)
 
