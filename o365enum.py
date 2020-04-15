@@ -112,6 +112,8 @@ def o365enum_office(usernames):
                 json=payload
             )
             if response.status_code == 200:
+                if int(response.json()['ThrottleStatus']) == 1:
+                    print("POSSIBLE THROTTLE DETECTED ON REQUEST FOR {}".format(username))
                 if int(response.json()['IfExistsResult']) == 1:
                     print("{} INVALID_USER".format(username))
                 else:
