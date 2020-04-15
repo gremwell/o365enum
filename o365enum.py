@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 '''
 Office365 User Enumeration script.
-Enumerate valid usernames from Office 365 using ActiveSync or office.com login page.
+Enumerate valid usernames from Office 365 using the office.com login page.
 
 Author: Quentin Kaiser <quentin@gremwell.com>
 Author: Cameron Geehr @BarrelTit0r
