@@ -35,9 +35,6 @@ notreal@badomain.com UNKNOWN_DOMAIN
 
 For companies that use on premise Exchange servers or some hybrid deployment and based on some configuration I haven't identified yet, the script will return DOMAIN_NOT_SUPPORTED.
 
-The method is useful when you don't want to burn an authentication attempt with 'Password1' :)
-
-
 ### Existing User
 
 When the account exists, `IfExistsResult` is set to 0, 5, or 6.
