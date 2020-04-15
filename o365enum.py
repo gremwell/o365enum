@@ -117,7 +117,7 @@ def o365enum_office(usernames):
                 else:
                     print("{} VALID_USER".format(username))
             else:
-                print("{} REQUEST ERROR".format(username))
+                print("{} REQUEST_ERROR".format(username))
         elif environments[domain] == "Federated":
             print("{} DOMAIN_NOT_SUPPORTED".format(username))
         else:
