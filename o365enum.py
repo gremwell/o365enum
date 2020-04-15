@@ -4,6 +4,7 @@ Office365 User Enumeration script.
 Enumerate valid usernames from Office 365 using ActiveSync or office.com login page.
 
 Author: Quentin Kaiser <quentin@gremwell.com>
+Author: Cameron Geehr @BarrelTit0r
 '''
 import random
 import re
@@ -11,7 +12,6 @@ import string
 import argparse
 import logging
 import requests
-import csv 
 import xml.etree.ElementTree as ET 
 
 try:
@@ -144,3 +144,4 @@ if __name__ == "__main__":
         requests_log.propagate = True
 
     o365enum_office(load_usernames(args.userlist))
+
