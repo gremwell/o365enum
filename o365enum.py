@@ -93,10 +93,12 @@ def o365enum_office(usernames):
         "isSignup":False,
         "isAccessPassSupported":True
     }
-    
+
     environments = dict()
     for username in usernames:
-        
+        # Check to see if this domain has already been checked
+        # If it's managed, it's good to go and we can proceed
+        # If it's anything else, don't bother checking
         domain = username.split("@")[1]
         if not domain in environments:
             url = 'https://login.microsoftonline.com/getuserrealm.srf?login={}&xml=1'.format(username)
@@ -112,12 +114,15 @@ def o365enum_office(usernames):
                 json=payload
             )
             if response.status_code == 200:
-                if int(response.json()['ThrottleStatus']) == 1:
+                throttleStatus = int(response.json()['ThrottleStatus'])
+                ifExistsResult = str(response.json()['IfExistsResult'])
+                
+                # NotThrottled:0,AadThrottled:1,MsaThrottled:2
+                if not throttleStatus == 0:
                     print("POSSIBLE THROTTLE DETECTED ON REQUEST FOR {}".format(username))
-                if int(response.json()['IfExistsResult']) == 1:
-                    print("{} INVALID_USER".format(username))
-                else:
-                    print("{} VALID_USER".format(username))
+                # Unknown:-1,Exists:0,NotExist:1,Throttled:2,Error:4,ExistsInOtherMicrosoftIDP:5,ExistsBothIDPs:6
+                ifExistsResultCodes = {"-1": "UNKNOWN", "0": "VALID_USER", "1": "INVALID_USER", "2": "THROTTLE", "4": "ERROR", "5": "VALID_USER", "6": "VALID_USER"}
+                print("{} {}".format(username, ifExistsResultCodes[ifExistsResult]))
             else:
                 print("{} REQUEST_ERROR".format(username))
         elif environments[domain] == "Federated":
