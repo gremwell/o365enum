@@ -94,19 +94,21 @@ def o365enum_office(usernames):
         "isAccessPassSupported":True
     }
 
+    # Unknown:-1,Exists:0,NotExist:1,Throttled:2,Error:4,ExistsInOtherMicrosoftIDP:5,ExistsBothIDPs:6
+    ifExistsResultCodes = {"-1": "UNKNOWN", "0": "VALID_USER", "1": "INVALID_USER", "2": "THROTTLE", "4": "ERROR", "5": "VALID_USER_DIFFERENT_IDP", "6": "VALID_USER"}
+    # 1:Unknown,2:Consumer,3:Managed,4:Federated,5:CloudFederated
+    domainType = {"1": "UNKNOWN", "2": "COMMERCIAL", "3": "MANAGED", "4": "FEDERATED", "5": "CLOUD_FEDERATED"}
     environments = dict()
     for username in usernames:
         # Check to see if this domain has already been checked
         # If it's managed, it's good to go and we can proceed
         # If it's anything else, don't bother checking
-        domain = username.split("@")[1]
-        if not domain in environments:
-            url = 'https://login.microsoftonline.com/getuserrealm.srf?login={}&xml=1'.format(username)
-            resp = requests.get(url)
-            xmlroot = ET.fromstring(resp.content)
-            environments[domain] = xmlroot[3].text
-        
-        if environments[domain] == "Managed":
+        # If it hasn't been checked yet, look up that user and get the domain info back
+        if username.index("@") > 0: # don't crash the program with an index out of bounds exception if a bad email is entered
+            domain = username.split("@")[1]
+        else:
+            domain = " "
+        if not domain in environments or environments[domain] == "MANAGED":
             payload["username"] = username
             response = session.post(
                 "https://login.microsoftonline.com/common/GetCredentialType?mkt=en-US",
@@ -116,19 +118,19 @@ def o365enum_office(usernames):
             if response.status_code == 200:
                 throttleStatus = int(response.json()['ThrottleStatus'])
                 ifExistsResult = str(response.json()['IfExistsResult'])
-                
-                # NotThrottled:0,AadThrottled:1,MsaThrottled:2
-                if not throttleStatus == 0:
-                    print("POSSIBLE THROTTLE DETECTED ON REQUEST FOR {}".format(username))
-                # Unknown:-1,Exists:0,NotExist:1,Throttled:2,Error:4,ExistsInOtherMicrosoftIDP:5,ExistsBothIDPs:6
-                ifExistsResultCodes = {"-1": "UNKNOWN", "0": "VALID_USER", "1": "INVALID_USER", "2": "THROTTLE", "4": "ERROR", "5": "VALID_USER", "6": "VALID_USER"}
-                print("{} {}".format(username, ifExistsResultCodes[ifExistsResult]))
+                environments[domain] = domainType[str(response.json()['EstsProperties']['DomainType'])]
+
+                if environments[domain] == "MANAGED":
+                    # NotThrottled:0,AadThrottled:1,MsaThrottled:2
+                    if not throttleStatus == 0:
+                        print("POSSIBLE THROTTLE DETECTED ON REQUEST FOR {}".format(username))
+                    print("{} {}".format(username, ifExistsResultCodes[ifExistsResult]))
+                else:
+                    print("{} DOMAIN TYPE {} NOT SUPPORTED".format(username, environments[domain]))
             else:
-                print("{} REQUEST_ERROR".format(username))
-        elif environments[domain] == "Federated":
-            print("{} DOMAIN_NOT_SUPPORTED".format(username))
+                print("{} REQUEST ERROR".format(username))
         else:
-            print("{} UNKNOWN_DOMAIN".format(username))
+            print("{} DOMAIN TYPE {} NOT SUPPORTED".format(username, environments[domain]))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
