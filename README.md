@@ -211,10 +211,23 @@ For companies that use on premise Exchange servers or some hybrid deployment and
 
 The method is useful when you don't want to burn an authentication attempt with 'Password1' :)
 
+#### Determining if a user exists
 
-#### Existing User
+The IfExistsResult property is used to describe if and how an account exists. As discussed on this [RSM blog article](https://warroom.rsmus.com/enumerating-emails-via-office-com/), the values are as follows:
 
-When the account does not exist, `IfExistsResult` is set to 0.
+| Item         | Price     |
+|--------------|-----------|
+| -1 | An unknown error |
+| 0 | The account exists, and uses that domain for authentication |
+| 1 | The account doesn’t exist |
+| 2 | The response is being throttled |
+| 4 | Some server error |
+| 5 | The account exists, but is set up to authenticate with a different identity provider. This could indicate the account is only used as a personal account |
+| 6 | The account exists, and is set up to use both the domain and a different identity provider |
+
+##### Existing User
+
+When the account exists, `IfExistsResult` is set to one of the integers mentioned above, commonly `1`.
 
 ```
 POST /common/GetCredentialType?mkt=en-US HTTP/1.1
@@ -292,7 +305,7 @@ Content-Length: 587
 }
 ```
 
-#### Nonexistent User
+##### Nonexistent User
 
 When the account does not exist, `IfExistsResult` is set to 1.
 
@@ -376,3 +389,4 @@ Content-Length: 579
 ## Contributors
 
 * [@jenic](https://github.com/jenic) - Arguments parsing and false negative reduction.
+* [@Mike-Crowley](https://github.com/Mike-Crowley) - IfExistsResult description correction.
