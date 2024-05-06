@@ -10,12 +10,16 @@ import re
 import string
 import argparse
 import logging
+import time
 import requests
 
 try:
     import http.client as http_client
 except ImportError:
     import httplib as http_client
+
+sleep_value = 0
+jitter_value = 0
 
 def load_usernames(usernames_file):
     '''
@@ -29,6 +33,12 @@ def load_usernames(usernames_file):
     '''
     with open(usernames_file) as file_handle:
         return [line.strip() for line in file_handle.readlines()]
+
+def cooldown():
+    if sleep_value > 0:
+        s = sleep_value + int(sleep_value * float(random.randint(1, jitter_value) / 100.0))
+        logging.info(f'Sleeping for {s} seconds...')
+        time.sleep(s)
 
 def o365enum_activesync(usernames):
     '''
@@ -44,12 +54,14 @@ def o365enum_activesync(usernames):
     for username in usernames:
         state = 0
         for _ in range(0, args.num):
+            cooldown()
             response = requests.options(
                 "https://outlook.office365.com/Microsoft-Server-ActiveSync",
                 headers=headers,
                 auth=(username, args.password)
             )
 
+            logging.info(f"\nReceived: {response.text}")
             if response.status_code == 200:
                 state = 2
                 break
@@ -57,6 +69,7 @@ def o365enum_activesync(usernames):
                 if 'X-MailboxGuid' in response.headers:
                     state = 1
                     break
+
         print("{},{}".format(username, state))
 
 def o365enum_autodiscover(usernames):
@@ -73,12 +86,14 @@ def o365enum_autodiscover(usernames):
     for username in usernames:
         state = 0
         for _ in range(0, args.num):
+            cooldown()
             response = requests.get(
                 "https://outlook.office365.com/autodiscover/autodiscover.json"\
                     "/v1.0/{}?Protocol=Autodiscoverv1".format(username),
                 headers=headers,
                 allow_redirects=False
             )
+            logging.info(f"\nReceived: {response.text}")
             if response.status_code == 200:
                 state = 1
                 break
@@ -100,6 +115,7 @@ def o365enum_office(usernames):
             " (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36"
     }
     # first we open office.com main page
+
     session = requests.session()
     response = session.get(
         "https://www.office.com",
@@ -157,8 +173,18 @@ def o365enum_office(usernames):
             headers=headers,
             json=payload
         )
+        logging.info(f"\nReceived: {response.json()}")
         if response.status_code == 200:
-            exists = not int(response.json()['IfExistsResult'])
+            result = int(response.json()['IfExistsResult'])
+            
+            # based on table from: 
+            # https://www.redsiege.com/blog/2020/03/user-enumeration-part-2-microsoft-office-365/
+            if result in (0, 5, 6): 
+                exists = 1
+            elif result == 1:
+                exists = 0
+            else:
+                exists = -1
         else:
             exists = -1
         print("{},{}".format(username, int(exists)))
@@ -199,6 +225,7 @@ def o365enum_msoloauth(usernames, url="https://login.microsoft.com"):
     for username in usernames:
         state = -1
         body['username'] = username
+        cooldown()
         response = requests.post(
             url + '/common/oauth2/token',
             headers=headers,
@@ -215,6 +242,7 @@ def o365enum_msoloauth(usernames, url="https://login.microsoft.com"):
         # 6 = acc disabled
         # 7 = pwd expired
         # 8 = invalid tenant response
+        logging.info(f"\nReceived: {response.text}")
         if response.status_code == 200:
             state = 2
         else:
@@ -260,6 +288,13 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--method', default='activesync', type=str,\
         choices=('activesync', 'autodiscover', 'office.com', 'msol'),\
         help='method to use')
+    parser.add_argument('-s', '--sleep', type=int,
+         help="Throttle subsequent attempts every # seconds, can be randomized by passing the value 'random' (between 1sec and 20 mins) - default is 0",
+         default = 0)
+    parser.add_argument('-j', '--jitter', type=int,
+         help="Jitter among subsequent tries. Jitter extends sleep period by percanted given (0-100). Default: no jitter.",
+         default = 0)
+
     args = parser.parse_args()
 
     if args.verbose:
@@ -271,5 +306,18 @@ if __name__ == "__main__":
         requests_log = logging.getLogger("requests.packages.urllib3")
         requests_log.setLevel(logging.DEBUG)
         requests_log.propagate = True
+
+    if args.sleep == 'random':
+        sleep_value = random.randint(1, 20 * 60)
+
+    if args.sleep > 0:
+        sleep_value = args.sleep
+
+    if args.jitter > 0 and sleep_value > 0:
+        jitter_value = args.jitter
+        logging.info(f'\nJitter: {sleep_value} %')
+
+    if sleep_value > 0:
+        logging.info(f'\nSleep: {sleep_value} seconds.')
 
     o365enum(load_usernames(args.userlist), args.method)
